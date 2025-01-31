@@ -20,6 +20,7 @@ const Page = () => {
 
   useEffect(() => {
     setIsMobile(/Mobi|Android/i.test(navigator.userAgent));
+
     return () => {
       if (scannerRef.current) {
         scannerRef.current.stop().catch(console.error);
@@ -46,7 +47,7 @@ const Page = () => {
             setIsScanning(false);
           },
           (errorMessage) => {
-            console.log(errorMessage);
+            console.log("QR scanning error:", errorMessage);
           }
         );
       } catch (err) {
@@ -68,12 +69,12 @@ const Page = () => {
       const scanner = new Html5Qrcode("reader");
       scannerRef.current = scanner;
 
-      const imageFile = file;
       try {
-        const decodedText = await scanner.scanFile(imageFile, true);
+        const decodedText = await scanner.scanFile(file, true);
         handleSuccessfulScan(decodedText);
       } catch (error) {
-        setAlertMessage("No valid QR code found in the image");
+        console.error("QR Code scan error:", error);
+        setAlertMessage("No valid QR code found in the image.");
         setShowAlert(true);
       } finally {
         if (scanner) {
@@ -88,12 +89,23 @@ const Page = () => {
   };
 
   const handleSuccessfulScan = (decodedText) => {
-    setShowQRPopup(false);
-    // Handle the scanned QR code data
-    console.log("Scanned QR code:", decodedText);
-    // Add your logic here to process the QR code data
-    alert(`Successfully scanned: ${decodedText}`);
-    router.push(`/events/startup/${decodedText}`);
+    try {
+      const scannedData = JSON.parse(decodedText); // Parse scanned JSON data
+      setShowQRPopup(false);
+
+      if (!scannedData.id || !scannedData.startup) {
+        throw new Error("Invalid QR data format");
+      }
+
+      // Redirect with query parameters
+      router.push(
+        `/events/startup?id=${encodeURIComponent(scannedData.id)}&message=${encodeURIComponent(scannedData.message)}&startup=${encodeURIComponent(scannedData.startup)}`
+      );
+    } catch (error) {
+      console.error("Invalid QR data:", error);
+      setAlertMessage("Invalid QR code scanned. Please try again.");
+      setShowAlert(true);
+    }
   };
 
   return (
@@ -145,7 +157,7 @@ const Page = () => {
       </div>
 
       {/* QR Scanner Container */}
-      <div id="reader" className={`${isScanning ? 'fixed inset-0 z-50 bg-black' : 'hidden'}`} />
+      <div id="reader" className={`${isScanning ? "fixed inset-0 z-50 bg-black" : "hidden"}`} />
 
       {/* QR Upload Dialog for Desktop */}
       <Dialog open={showQRPopup} onOpenChange={setShowQRPopup}>
@@ -186,5 +198,6 @@ const Page = () => {
 };
 
 export default Page;
+
 
 
