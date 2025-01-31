@@ -93,6 +93,7 @@ const Page = () => {
     console.log("Scanned QR code:", decodedText);
     // Add your logic here to process the QR code data
     alert(`Successfully scanned: ${decodedText}`);
+    router.push(`/events/startup/${decodedText}`);
   };
 
   return (
