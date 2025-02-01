@@ -30,27 +30,6 @@ const Page = () => {
     };
   }, []);
 
-  const fetchStartupData = async (id) => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/startups/${id}`);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch startup data');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching startup data:', error);
-      setAlertMessage(error.message);
-      setShowAlert(true);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleQRScan = async () => {
     if (isMobile) {
       try {
@@ -100,12 +79,12 @@ const Page = () => {
   const handleSuccessfulScan = async (decodedText) => {
     try {
       const scannedData = JSON.parse(decodedText);
-      if (!scannedData.id) {
+      if (!scannedData.id || !scannedData.startup || !scannedData.message || !scannedData.description) {
         throw new Error("Invalid QR data format");
       }
 
-      const startupData = await fetchStartupData(scannedData.id);
-      router.push(`/events/startup/${startupData.id}`);
+      // Redirect to the startup details page with the scanned data
+      router.push(`/events/startup/${scannedData.id}`);
     } catch (error) {
       console.error("Error processing scan:", error);
       setAlertMessage("Invalid QR code or unable to fetch data. Please try again.");

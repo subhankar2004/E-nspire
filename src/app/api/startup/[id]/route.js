@@ -1,7 +1,13 @@
-// app/api/startups/[id]/route.js
 import { NextResponse } from 'next/server';
 
 const startupDatabase = {
+  "12345": {
+    id: "12345",
+    message: "You have been assigned to Tech Innovators!",
+    startup: "Tech Innovators",
+    description: "A cutting-edge tech startup focused on AI and machine learning.",
+    type: "Artificial Intelligence"
+  },
   "001": {
     id: "001",
     message: "You've been assigned to an innovative AI startup!",
@@ -25,22 +31,30 @@ const startupDatabase = {
   }
 };
 
-export async function GET(request, { params }) {
+export async function GET(request, context) {
   try {
-    const id = params.id;
-    
+    // Await params to properly access its properties
+    const { id } = await context.params;
+
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const startupData = startupDatabase[id];
-    
+
+    let startupData = startupDatabase[id];
+
+    // If ID doesn't exist, return a dynamic response instead of 404
     if (!startupData) {
       return NextResponse.json(
-        { error: 'Startup not found' },
-        { status: 404 }
+        {
+          id: id,
+          message: "Startup ID not found in database, but you have a valid QR code.",
+          startup: "Unknown Startup",
+          description: "This startup is not pre-registered, but it's still valid.",
+          type: "Unknown"
+        },
+        { status: 200 }
       );
     }
-    
+
     return NextResponse.json(startupData);
   } catch (error) {
     console.error('API Error:', error);
@@ -50,3 +64,4 @@ export async function GET(request, { params }) {
     );
   }
 }
+
